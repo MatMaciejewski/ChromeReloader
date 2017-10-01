@@ -38,38 +38,18 @@ function getCurrentTabUrl(callback) {
   });
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
-async function getCurrentTab(){
+
+async function getCurrentTabIndex(){
   var queryInfo = {
     active: true,
     currentWindow: true
   };
-  await chrome.tabs.query(queryInfo, (tabs) => {
+  chrome.tabs.query(queryInfo, (tabs) => {
     console.log(tabs);
     console.log("INSIDE GET");
-    return tabs[0].url;
   });
-}
 
-async function reloader(tab){
-  if(tab.length>0){
-    await sleep(1000);
-    chrome.tabs.reload(tab[0].id);
-    reloader(tab.slice(1,));
-  }
-}
-
-async function getCurrentTabIndex(){
-  var url = "buty";
-  await getCurrentTab().then(function(result){
-    console.log("ACQUIRED ",result)
-    url = result;
-  }, function(err){
-    console.log("jebuo ",err);
-  });
   console.log("Poszukiwany ",url)
   var queryInfo = {
       currentWindow: true
@@ -91,46 +71,56 @@ async function getCurrentTabIndex(){
   return -1;
 }
 
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function reloader(tab){
+  if(tab.length>0){
+    await sleep(1000);
+    chrome.tabs.reload(tab[0].id);
+    reloader(tab.slice(1,));
+  }
+}
+
 function reloadAllTabs(){
-  console.log("Executed");
-  console.log("slept");
-  console.log("Aktualny tab ma index ",getCurrentTabIndex());
-  console.log("Index GET");
   var queryInfo = {
     currentWindow: true
   };
   chrome.tabs.query(queryInfo, (tabs) => {
-    for (i = 0; i < tabs.length; i++) {
-      console.log("reload ",tabs[i].id)
-      // await sleep(500);
-      // await sleep(500);
-      // chrome.tabs.reload(tabs[i].id);
-    }
-    console.log(tabs.slice(1,))
-    console.log("Executing query");
-    console.log(tabs);
-    console.log("------------TRIAL START------------")
+    chrome.tabs.query({
+      active: true,
+      currentWindow: true
+    }, (act) => {
+      var index = -1;
+      for(i = 0;i<tabs.length;i++){
+        if(tabs[i].url == act[0].url){
+          index=i;
+          break;
+        }
+      }
+      if(index<tabs.length-1){
+        reloader(tabs.slice(index+1,));
+      }
+    })
     // reloader(tabs)
   });
 }
 
-// This extension loads the saved background color for the current tab if one
-// exists. The user can select a new background color from the dropdown for the
-// current page, and it will be saved as part of the extension's isolated
-// storage. The chrome.storage API is used for this purpose. This is different
-// from the window.localStorage API, which is synchronous and stores data bound
-// to a document's origin. Also, using chrome.storage.sync instead of
-// chrome.storage.local allows the extension data to be synced across multiple
-// user devices.
+
+
 document.addEventListener('DOMContentLoaded', () => {
   getCurrentTabUrl((url) => {
-    var dropdown = document.getElementById('tabNum');
-    console.log("wat");
-    dropdown.addEventListener('change', () => {
-      // changeBackgroundColor(dropdown.value);
-      // saveBackgroundColor(url, dropdown.value);
-      console.log("zmieniona wartosc ",dropdown.value);
+    var tabNum = document.getElementById('tabNum');
+    tabNum.addEventListener('change', () => {
+      console.log("Number");
       reloadAllTabs();
     });
+    var button = document.getElementById('reloadAll');
+    button.addEventListener('click', () => {
+      console.log("Button");
+      reloadAllTabs();
+    })
   });
 });
