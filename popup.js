@@ -84,6 +84,14 @@ async function reloader(tab){
   }
 }
 
+async function selectiveReloader(tab, amount){
+  if(tab.length>0&&amount>0){
+    await sleep(1000);
+    chrome.tabs.reload(tab[0].id);
+    selectiveReloader(tab.slice(1,),amount-1);
+  }
+}
+
 function reloadAllTabs(){
   var queryInfo = {
     currentWindow: true
@@ -104,18 +112,37 @@ function reloadAllTabs(){
         reloader(tabs.slice(index+1,));
       }
     })
-    // reloader(tabs)
   });
 }
 
-
+function reloadNumberOfTabs(amount){
+  var queryInfo = {
+    currentWindow: true
+  };
+  chrome.tabs.query(queryInfo, (tabs) => {
+    chrome.tabs.query({
+      active: true,
+      currentWindow: true
+    }, (act) => {
+      var index = -1;
+      for(i = 0;i<tabs.length;i++){
+        if(tabs[i].url == act[0].url){
+          index=i;
+          break;
+        }
+      }
+      if(index<tabs.length-1){
+        selectiveReloader(tabs.slice(index+1,),amount);
+      }
+    })
+  });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   getCurrentTabUrl((url) => {
     var tabNum = document.getElementById('tabNum');
     tabNum.addEventListener('change', () => {
-      console.log("Number");
-      reloadAllTabs();
+      reloadNumberOfTabs(tabNum.value);
     });
     var button = document.getElementById('reloadAll');
     button.addEventListener('click', () => {
