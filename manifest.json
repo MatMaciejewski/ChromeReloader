@@ -1,0 +1,17 @@
+{
+  "manifest_version": 2,
+
+  "name": "Multitab Reloader",
+  "description": "Extension for reloading inactive tabs on Google Chrome",
+  "version": "0.1",
+
+  "browser_action": {
+   "default_icon": "rel.png",
+   "default_popup": "popup.html"
+  },
+  "permissions": [
+   "activeTab",
+   "contextMenus",
+   "tabs"
+   ]
+}
