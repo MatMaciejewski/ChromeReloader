@@ -9,68 +9,55 @@ async function reloader(tab,amount){
     reloader(tab.slice(1,),amount-1);
   }
 }
-
-function reloadAllTabs(toRight){
-  var queryInfo = {
-    currentWindow: true
-  };
-  chrome.tabs.query(queryInfo, (tabs) => {
-    if(toRight==true){
-      chrome.tabs.query({
-        active: true,
-        currentWindow: true
-      }, (act) => {
-        var index = -1;
-        for(i = 0;i<tabs.length;i++){
-          if(tabs[i].url == act[0].url){
-            index=i;
-            break;
-          }
-        }
-        if(index<tabs.length-1){
-          reloader(tabs.slice(index+1,),tabs.length);
-        }
-      })
-    }else{
-      reloader(tabs)
-    }
+async function queryTabs( query) {
+  return new Promise((resolve, reject) => {
+    chrome.tabs.query(query, (tabs) => {
+      resolve(tabs);
+    });
   });
 }
 
-function reloadNumberOfTabs(amount){
-  var queryInfo = {
+async function reloadTabs(toRight,amount) {
+  let queryInfo = {
     currentWindow: true
   };
-  chrome.tabs.query(queryInfo, (tabs) => {
-    chrome.tabs.query({
-      active: true,
-      currentWindow: true
-    }, (act) => {
-      var index = -1;
-      for(i = 0;i<tabs.length;i++){
-        if(tabs[i].url == act[0].url){
-          index=i;
-          break;
-        }
-      }
-      if(index<tabs.length-1){
+  let activeQuery = {
+    active: true,
+    currentWindow: true
+  };
+  let tabs = await queryTabs(queryInfo);
+  if(toRight) {
+    let activeTabs = await queryTabs(activeQuery);
+    var index = -1;
+	  for(i = 0;i<tabs.length;i++){
+		  if(tabs[i].url == activeTabs[0].url){
+			  index=i;
+			  break;
+		  }
+	  }
+	  if(index<tabs.length-1){
+      if(amount>0){
         reloader(tabs.slice(index+1,),amount);
+      }else{
+        reloader(tabs.slice(index+1,),tabs.length);
       }
-    })
-  });
+	  }
+  } else {
+    reloader(tabs,tabs.length);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     var tabNum = document.getElementById('tabNum');
     tabNum.addEventListener('change', () => {
-      reloadNumberOfTabs(tabNum.value);
+      reloadTabs(true,tabNum.value);
     });
     var buttonAll = document.getElementById('reloadAll');
     buttonAll.addEventListener('click', () => {
-      reloadAllTabs();
+      reloadTabs(false,-1);
     });
     var buttonRight = document.getElementById('reloadAllTabsToTheRight');
     buttonRight.addEventListener('click', () => {
-      reloadAllTabs(true);
+      reloadTabs(true,-1);
     });
 });
