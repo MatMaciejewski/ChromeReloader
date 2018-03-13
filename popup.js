@@ -52,10 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
     tabNum.addEventListener('change', () => {
       reloadTabs(true,tabNum.value);
     });
-    var buttonAll = document.getElementById('reloadAll');
-    buttonAll.addEventListener('click', () => {
-      reloadTabs(false,-1);
-    });
     var buttonRight = document.getElementById('reloadAllTabsToTheRight');
     buttonRight.addEventListener('click', () => {
       reloadTabs(true,-1);
